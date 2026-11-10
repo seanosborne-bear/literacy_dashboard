@@ -82,6 +82,7 @@ if program_type_choice != "All programs (overall)":
             labels={pt_gap_col: "Gap ratio", "zip_code": "Zip code"},
             height=550,
         )
+        fig2.update_yaxes(type="category")
         st.plotly_chart(fig2, use_container_width=True)
     else:
         st.info("No gap ratio column found for this program type.")
