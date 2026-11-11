@@ -10,10 +10,10 @@ st.title("San Diego County Literacy Service Gap Dashboard")
 
 st.markdown(
     """
-    This dashboard examines literacy need, service access, and program coverage
-    across various San Diego County zip codes.
+    This dashboard different zip codes across San Diego County to examine their need for literacy assistance, 
+    access to said assistance, and how programs for it cover these codes.
 
-    **Use the sidebar to navigate between pages]:**
+    **The related pages can be found below:**
 
     - **Hotspot Map**: Where in San Diego is literacy help needed most?
     - **Literacy Rates by Zip**: How do literacy levels compare across each zip code?

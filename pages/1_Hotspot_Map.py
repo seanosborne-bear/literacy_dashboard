@@ -14,7 +14,7 @@ st.markdown(
 
     *Note: a true zip-boundary choropleth needs the TIGER/Line zip boundary
     shapefile, which hasn't been provided yet (too large to upload). This view
-    uses zip-code centroid points instead — switch to a filled-boundary map once
+    uses zip-code centroid points instead, but will switch to a filled-boundary map once
     that shapefile is available.*
     """
 )
