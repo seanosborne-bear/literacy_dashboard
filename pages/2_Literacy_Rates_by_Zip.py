@@ -13,7 +13,7 @@ st.markdown(
 
     - **Level 1**: Predicted to have below basic literacy
     - **Level 2**: Predicted to have literacy between basic and moderate
-    - **Level 3**: Preedicted to have moderate to proficient fluency
+    - **Level 3**: Predicted to have moderate to proficient fluency
     """
 )
 
@@ -34,6 +34,11 @@ show_institutional = st.sidebar.checkbox(
     value=False,
 )
 sort_by = st.sidebar.selectbox("Sort zip table by", ["Level 1", "Level 2", "Level 3", "Zip code"])
+chart_scope = st.sidebar.radio(
+    "Main chart shows",
+    ["Top 10 by selected level", "Bottom 10 by selected level", "All zip codes"],
+    index=0,
+)
 
 view = df if show_institutional else df[~df["is_institutional"]]
 
@@ -41,9 +46,18 @@ level_map = {"Level 1": "Lit_P1", "Level 2": "Lit_P2_pred", "Level 3": "Lit_P3_p
 cols_to_plot = [level_map[l] for l in level_choice]
 
 # ---- Bar comparison across zips ----
-st.subheader("Literacy level rates by zip code")
+st.subheader("Literacy Level Rates by Zip Code")
 
-melted = view.melt(
+sort_col = level_map.get(sort_by, "Lit_P1")
+
+if chart_scope == "Top 10 by selected level":
+    chart_view = view.sort_values(sort_col, ascending=False).head(10)
+elif chart_scope == "Bottom 10 by selected level":
+    chart_view = view.sort_values(sort_col, ascending=True).head(10)
+else:
+    chart_view = view
+
+melted = chart_view.melt(
     id_vars=["zip_code", "name"],
     value_vars=cols_to_plot,
     var_name="level_col",
@@ -52,12 +66,7 @@ melted = view.melt(
 inv_map = {v: k for k, v in level_map.items()}
 melted["Level"] = melted["level_col"].map(inv_map)
 
-sort_col = level_map.get(sort_by, "zip_code")
-zip_order = (
-    view.sort_values(sort_col, ascending=False)["zip_code"].tolist()
-    if sort_by != "Zip code"
-    else sorted(view["zip_code"].tolist())
-)
+zip_order = chart_view.sort_values(sort_col, ascending=False)["zip_code"].tolist()
 
 fig = px.bar(
     melted,
@@ -72,9 +81,15 @@ fig = px.bar(
 fig.update_layout(xaxis_tickangle=-60, bargap=0.05, bargroupgap=0.02)
 fig.update_xaxes(type="category")
 st.plotly_chart(fig, use_container_width=True)
+if chart_scope == "All zip codes":
+    st.caption(
+        f"Showing all {len(chart_view)} zip codes — switch the sidebar to 'Top 10' or "
+        "'Bottom 10' for a more readable view."
+    )
 
 # ---- Scatter: level 1 vs level 3 as a quick "need vs strength" view ----
 st.subheader("Level 1 Need vs. Level 3 Proficiency by Zip Code")
+st.caption("Bubble size = adult population of the zip code. Color = median household income.")
 fig2 = px.scatter(
     view,
     x="Lit_P1",
@@ -95,7 +110,15 @@ st.plotly_chart(fig2, use_container_width=True)
 # ---- Table + download ----
 st.subheader("Data")
 table_cols = ["zip_code", "name", "adult_population", "Lit_P1", "Lit_P2_pred", "Lit_P3_pred", "is_institutional"]
-st.dataframe(view[table_cols].sort_values(sort_col, ascending=False), use_container_width=True)
+display_table = view[table_cols].sort_values(sort_col, ascending=False).rename(columns={
+    "name": "Area name",
+    "adult_population": "Adult population",
+    "Lit_P1": "Level 1 rate",
+    "Lit_P2_pred": "Level 2 rate (predicted)",
+    "Lit_P3_pred": "Level 3 rate (predicted)",
+    "is_institutional": "Institutional/non-residential",
+})
+st.dataframe(display_table, use_container_width=True)
 
 csv = view[table_cols].to_csv(index=False).encode("utf-8")
 st.download_button(
