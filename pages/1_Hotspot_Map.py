@@ -26,9 +26,18 @@ programs = load_programs()
 st.sidebar.header("Filters")
 
 tier_options = sorted(hotspots["hotspot_tier"].dropna().unique())
-selected_tiers = st.sidebar.multiselect(
-    "Hotspot tier", tier_options, default=tier_options
+# short display labels so the filter chips don't get visually truncated in the
+# sidebar; the full description still appears in the map legend and tooltips
+tier_short_labels = {
+    "High need (clustered hotspot)": "High need",
+    "Medium need (isolated high-need)": "Medium need",
+    "Low need": "Low need",
+}
+short_to_full = {v: k for k, v in tier_short_labels.items()}
+selected_tier_labels = st.sidebar.multiselect(
+    "Hotspot tier", list(tier_short_labels.values()), default=list(tier_short_labels.values())
 )
+selected_tiers = [short_to_full[s] for s in selected_tier_labels]
 
 affiliation_toggle = st.sidebar.radio(
     "Show programs",
@@ -119,6 +128,11 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+st.caption(
+    "Bubble color = need tier (red/orange/green). Bubble **size** = Level 1 (low-literacy) "
+    "rate for that zip code — bigger bubble means a larger share of adults with low literacy. "
+    "Blue dots are program locations, shown per the toggle above."
+)
 
 # ---- Summary table + download ----
 st.subheader("Filtered Data")
@@ -126,7 +140,16 @@ display_cols = [
     "zip_code", "hotspot_tier", "Lit_P1", "Lit_P2_pred", "Lit_P3_pred",
     "trend_category", "program_count", "programs_per_10k_adults",
 ]
-st.dataframe(filtered[display_cols].sort_values("Lit_P1", ascending=False), use_container_width=True)
+display_table = filtered[display_cols].sort_values("Lit_P1", ascending=False).rename(columns={
+    "hotspot_tier": "Need tier",
+    "Lit_P1": "Level 1 rate",
+    "Lit_P2_pred": "Level 2 rate (predicted)",
+    "Lit_P3_pred": "Level 3 rate (predicted)",
+    "trend_category": "Trend (2017-2023)",
+    "program_count": "Programs in zip",
+    "programs_per_10k_adults": "Programs per 10k adults",
+})
+st.dataframe(display_table, use_container_width=True)
 
 csv = filtered[display_cols].to_csv(index=False).encode("utf-8")
 st.download_button(
