@@ -33,12 +33,20 @@ c2.metric("High-need zip codes", high_need_zips)
 c3.metric("Zip codes with zero programs", zero_program_zips)
 c4.metric("Programs in directory", total_programs)
 
+st.subheader("**Where Should I Start?**")
+
 st.markdown(
     """
-    **Start here:** the Service Gap Rankings page shows which zip codes have the
+    The Service Gap Rankings page shows which zip codes have the
     biggest mismatch between literacy need and available programs — that's the
-    fastest way to see where help is most urgently needed.
+    fastest way to see where help is most urgently needed."""
+)
 
+st.subheader("Pages")
+
+st.markdown(
+    """
+)
     **The rest of the pages can be found in the sidebar:**
 
     - **Hotspot Map**: Where in San Diego is literacy help needed most?
