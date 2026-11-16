@@ -10,7 +10,13 @@ st.title("Micro-Area Literacy Score Map")
 
 st.markdown(
     """
-    Each zip code can be scored based on how badly help is needed, how accessible help is, and whether this help can improve.
+    Each zip code gets a composite score out of 100, built from three sub-scores.
+
+    **Important: for every score on this page, higher is always better for the community** —
+    a high "Need Severity" sub-score means *low* actual need (favorable), not high need. It's
+    named after what it measures (need severity), but oriented so bigger numbers are better news,
+    same as the other two sub-scores.
+
     Three zip codes (university/military, non-residential) are excluded from
     scoring and shown separately with a data-quality flag.
     """
@@ -36,8 +42,8 @@ view = scored[
     & scored["trend_category"].isin(trend_filter)
 ]
 
-# ---- Map ----
-st.subheader("Composite score map")
+st.subheader("Composite Score Map")
+st.caption("Higher score (greener) = better outcomes for the community. Lower score (redder) = greater unmet need.")
 fig = go.Figure(
     go.Scattermap(
         lat=view["lat"], lon=view["lon"],
@@ -48,12 +54,12 @@ fig = go.Figure(
             colorscale="RdYlGn",
             cmin=scored["literacy_score"].min(),
             cmax=scored["literacy_score"].max(),
-            colorbar=dict(title="Literacy score (0-100)"),
+            colorbar=dict(title="Literacy score<br>(0-100, higher = better)"),
         ),
         text=view.apply(
             lambda r: f"Zip {r['zip_code']}<br>Score: {r['literacy_score']:.1f}"
-            f"<br>Need severity: {r['need_severity_score']:.2f}"
-            f"<br>Service access: {r['service_access_score']:.2f}"
+            f"<br>Need severity (higher = less need): {r['need_severity_score']:.2f}"
+            f"<br>Service access (higher = better access): {r['service_access_score']:.2f}"
             f"<br>Trend: {r['trend_category']} ({r['trend_direction_score']:.2f})",
             axis=1,
         ),
@@ -66,15 +72,20 @@ fig.update_layout(
 )
 st.plotly_chart(fig, use_container_width=True)
 
-# ---- Sub-score breakdown for a selected zip ----
 st.subheader("Sub-score Breakdown For a Selected Zip")
+st.caption("All values below are on a 0-1 scale where higher is always better for the community.")
 zip_choice = st.selectbox("Zip code", sorted(view["zip_code"].tolist()))
 row = view[view["zip_code"] == zip_choice].iloc[0]
 
 col1, col2, col3 = st.columns(3)
-col1.metric("Need Severity", f"{row['need_severity_score']:.2f}")
-col2.metric("Service Access", f"{row['service_access_score']:.2f}")
-col3.metric("Trend Direction", f"{row['trend_direction_score']:.2f}")
+col1.metric("Need Severity (higher = less need)", f"{row['need_severity_score']:.2f}")
+col2.metric("Service Access (higher = better)", f"{row['service_access_score']:.2f}")
+col3.metric("Trend Direction (higher = improving)", f"{row['trend_direction_score']:.2f}")
+if row["trend_direction_score"] == 0:
+    st.caption(
+        "A Trend Direction of 0.00 means this zip is in the 'persistent high-need' or "
+        "'emerging problem' category — its literacy rate hasn't improved from 2017 to 2023."
+    )
 
 breakdown = pd.DataFrame({
     "Component": [
@@ -98,22 +109,27 @@ fig_bar = px.bar(
     breakdown, x="Component", y="Value", color="Sub-score group",
     height=400,
 )
-fig_bar.update_layout(xaxis_tickangle=-30)
+fig_bar.update_layout(xaxis_tickangle=-30, yaxis_title="Score (0-1, higher = better)")
 st.plotly_chart(fig_bar, use_container_width=True)
-st.metric(f"Composite Literacy Score — Zip {zip_choice}", f"{row['literacy_score']:.1f} / 100")
+st.metric(f"Composite Literacy Score — Zip {zip_choice} (0-100, higher = better)", f"{row['literacy_score']:.1f} / 100")
 
-# ---- Excluded zips note ----
 if not excluded.empty:
     with st.expander(f"{len(excluded)} zip codes excluded from scoring (institutional/non-residential)"):
         st.dataframe(excluded[["zip_code", "data_quality_flag"]], use_container_width=True)
 
-# ---- Table + download ----
 st.subheader("Full Scored Data")
 table_cols = [
     "zip_code", "literacy_score", "need_severity_score", "service_access_score",
     "trend_direction_score", "trend_category",
 ]
-st.dataframe(view[table_cols].sort_values("literacy_score", ascending=False), use_container_width=True)
+display_table = view[table_cols].sort_values("literacy_score", ascending=False).rename(columns={
+    "literacy_score": "Literacy score (0-100)",
+    "need_severity_score": "Need severity (0-1, higher = less need)",
+    "service_access_score": "Service access (0-1, higher = better)",
+    "trend_direction_score": "Trend direction (0-1, higher = improving)",
+    "trend_category": "Trend category",
+})
+st.dataframe(display_table, use_container_width=True)
 
 csv = df.to_csv(index=False).encode("utf-8")
 st.download_button(

@@ -33,8 +33,7 @@ rank_col_map = {
     "Level 3": "rank_by_level3",
     "Overall severity": "severity_rank",
 }
-# the metric actually plotted on the main chart's x-axis -- always matches
-# the column used to rank/sort, so the bars read as a real ranking
+
 metric_col_map = {
     "Level 1": "demand_level1",
     "Level 2": "demand_level2",
@@ -67,7 +66,6 @@ if zero_program_only:
 
 view = view.sort_values(rank_col)
 
-# ---- Top 20 ranking chart ----
 st.subheader(f"Top 20 zip codes by {level_rank_choice} rank")
 top20 = view.head(20).sort_values(metric_col, ascending=True)
 fig = px.bar(
@@ -88,7 +86,6 @@ fig.update_layout(bargap=0.1, xaxis_title=f"{metric_label} (higher = greater unm
 fig.update_yaxes(type="category")
 st.plotly_chart(fig, use_container_width=True)
 
-# ---- Program-type specific gap view ----
 if program_type_choice != "All programs (overall)":
     st.subheader(f"Gap ratio for {program_type_choice.replace('_', ' ')} programs")
     pt_gap_col = f"gap_ratio_{program_type_choice}"
