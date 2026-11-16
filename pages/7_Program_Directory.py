@@ -45,27 +45,38 @@ if only_incomplete:
 
 st.caption(f"Showing {len(view)} of {len(df)} programs")
 
-for _, row in view.sort_values("Name").iterrows():
-    with st.container(border=True):
-        c1, c2 = st.columns([3, 1])
-        with c1:
-            st.markdown(f"**{row['Name']}**  \n{row.get('Address', '')}, {row.get('City', '')}, {row.get('State', '')} {row.get('Zip Code', '')}")
-            if pd.notna(row.get("Description")):
-                st.caption(row["Description"])
-        with c2:
-            st.markdown(f"**{row['affiliation']}**")
-            st.markdown(f"{row.get('Program Type', '')}")
-        cols = st.columns(4)
-        cols[0].markdown(f"📞 {row.get('Phone', 'N/A')}")
-        cols[1].markdown(f"✉️ {row.get('Email', 'N/A')}")
-        cols[2].markdown(f"🕐 {row.get('Hours', 'N/A') if pd.notna(row.get('Hours')) else 'Not listed'}")
-        cols[3].markdown(f"👥 Capacity: {row.get('Capacity', 'N/A') if pd.notna(row.get('Capacity')) else 'Not listed'}")
-        if pd.notna(row.get("Flags")) and str(row.get("Flags")).strip():
-            st.warning(f"Flag: {row['Flags']}")
+view_mode = st.radio("View as", ["Compact table", "Detail cards"], index=0, horizontal=True)
 
-st.subheader("Table view")
-table_cols = ["Name", "City", "affiliation", "Program Type", "Hours", "Capacity", "Phone", "Email", "Website"]
-st.dataframe(view[table_cols], use_container_width=True)
+if view_mode == "Compact table":
+    table_cols = ["Name", "City", "affiliation", "Program Type", "Hours", "Capacity", "Phone", "Email", "Website"]
+    display_table = view[table_cols].rename(columns={"affiliation": "Affiliation"})
+    st.dataframe(display_table, use_container_width=True)
+else:
+    for _, row in view.sort_values("Name").iterrows():
+        with st.container(border=True):
+            c1, c2 = st.columns([3, 1])
+            with c1:
+                st.markdown(f"**{row['Name']}**  \n{row.get('Address', '')}, {row.get('City', '')}, {row.get('State', '')} {row.get('Zip Code', '')}")
+                if pd.notna(row.get("Description")):
+                    st.caption(row["Description"])
+            with c2:
+                st.markdown(f"**{row['affiliation']}**")
+                st.markdown(f"{row.get('Program Type', '')}")
+            cols = st.columns(4)
+            cols[0].markdown(f"📞 {row.get('Phone', 'N/A')}")
+            cols[1].markdown(f"✉️ {row.get('Email', 'N/A')}")
+            hours_val = row.get("Hours")
+            capacity_val = row.get("Capacity")
+            if pd.notna(hours_val):
+                cols[2].markdown(f"🕐 {hours_val}")
+            else:
+                cols[2].caption("🕐 Hours not listed")
+            if pd.notna(capacity_val):
+                cols[3].markdown(f"👥 Capacity: {capacity_val}")
+            else:
+                cols[3].caption("👥 Capacity not listed")
+            if pd.notna(row.get("Flags")) and str(row.get("Flags")).strip():
+                st.warning(f"Flag: {row['Flags']}")
 
 csv = view.to_csv(index=False).encode("utf-8")
 st.download_button(
