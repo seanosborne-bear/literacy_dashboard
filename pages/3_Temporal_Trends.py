@@ -18,8 +18,12 @@ selected_year = st.sidebar.slider(
 zip_search = st.sidebar.text_input("Highlight a specific zip code (optional)")
 
 st.markdown(
-    f"For each zip code, this visual the low-literacy rate for adults. "
+    "For each zip code, this visual shows the low-literacy rate for adults. "
     "Drag the slider in the sidebar to see how rates evolved from 2017 to 2023."
+)
+st.caption(
+    f"**Takeaway:** in {selected_year}, redder zip codes have a higher share of adults with "
+    "low literacy; greener zip codes are better off."
 )
 
 year_df = panel[panel["year"] == selected_year].copy()
@@ -55,16 +59,25 @@ st.plotly_chart(fig_map, use_container_width=True)
 
 # ---- County-wide trend line ----
 st.subheader("Average Low-Literacy Rate from 2017 to 2023")
+st.caption(
+    "**Takeaway:** the y-axis starts at 0 so the actual size of year-to-year change is "
+    "visible, rather than exaggerated by a tightly-zoomed scale."
+)
 county_trend = panel.groupby("year")["adult_low_literacy_rate"].mean().reset_index()
 fig_trend = px.line(
     county_trend, x="year", y="adult_low_literacy_rate", markers=True,
     labels={"adult_low_literacy_rate": "Avg. low-literacy rate", "year": "Year"},
 )
 fig_trend.add_vline(x=selected_year, line_dash="dash", line_color="gray")
+fig_trend.update_yaxes(rangemode="tozero")
 st.plotly_chart(fig_trend, use_container_width=True)
 
 # ---- Per-zip trend, chosen zips only ----
 st.subheader("Compare Zip Codes Over Time")
+st.caption(
+    "**Takeaway:** the shaded gray band is the county-wide range each year, for context. "
+    "The colored lines are whichever zip codes you select below."
+)
 
 all_zips = sorted(panel["zip_code"].unique())
 default_zips = (
