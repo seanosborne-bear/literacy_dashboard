@@ -9,8 +9,13 @@ st.title("Accessibility Analysis with Transit Layer")
 
 st.markdown(
     """
-    For each zip code, how easy is it for people in it to reach a literacy program? The San Diego MTS transit routes are overlayed for reference. 
+    For each zip code, how easy is it for people in it to reach a literacy program? The San Diego MTS transit routes are overlayed for reference.
     The higher the score, the better catered the zip code.
+
+    *Note: accessibility scores are heavily skewed (most zip codes cluster near the low end), so the
+    map colors zip codes by their **percentile rank** rather than the raw score, to actually
+    separate better-served areas from worse-served ones. Raw scores are still shown in each
+    zip's tooltip and in the table below.*
     """
 )
 
@@ -25,6 +30,10 @@ score_type = st.sidebar.radio(
     ["All programs", "Affiliated programs only"],
 )
 score_col = "accessibility_score_all_programs" if score_type == "All programs" else "accessibility_score_affiliated"
+
+# percentile rank (0-100) computed on the full dataset, before filtering, so it
+# stays consistent no matter how the threshold slider is set
+access["percentile"] = access[score_col].rank(pct=True) * 100
 
 min_score, max_score = float(access[score_col].min()), float(access[score_col].max())
 threshold = st.sidebar.slider(
@@ -44,16 +53,16 @@ fig.add_trace(
         mode="markers",
         marker=dict(
             size=14,
-            color=filtered[score_col],
+            color=filtered["percentile"],
             colorscale="RdYlGn",
-            cmin=min_score,
-            cmax=max_score,
-            colorbar=dict(title="Accessibility score"),
+            cmin=0,
+            cmax=100,
+            colorbar=dict(title="Accessibility percentile<br>(100 = best-served)"),
         ),
         name="Zip accessibility",
         text=filtered.apply(
             lambda r: f"Zip {r['zip_code']}<br>Hotspot tier: {r['hotspot_tier']}"
-            f"<br>Accessibility ({score_type}): {r[score_col]:.4f}"
+            f"<br>Accessibility ({score_type}): {r[score_col]:.4f} (percentile {r['percentile']:.0f})"
             f"<br>Walk to nearest stop: {r['walk_to_stop_minutes']:.1f} min"
             f"<br>Travel time to programs: {r['travel_min_affiliated' if score_type=='Affiliated programs only' else 'travel_min_all_programs']:.1f} min",
             axis=1,
@@ -90,7 +99,16 @@ table_cols = [
     "coverage_stop_count", "travel_min_affiliated", "travel_min_all_programs",
     "accessibility_score_affiliated", "accessibility_score_all_programs",
 ]
-st.dataframe(filtered[table_cols].sort_values(score_col, ascending=False), use_container_width=True)
+display_table = filtered[table_cols].sort_values(score_col, ascending=False).rename(columns={
+    "walk_to_stop_minutes": "Walk to nearest stop (min)",
+    "nearest_stop_headway_min": "Bus/trolley wait time, avg (min)",
+    "coverage_stop_count": "Transit stops within range",
+    "travel_min_affiliated": "Travel time to affiliated programs (min)",
+    "travel_min_all_programs": "Travel time to any program (min)",
+    "accessibility_score_affiliated": "Accessibility score, affiliated (0-1, higher = better)",
+    "accessibility_score_all_programs": "Accessibility score, all programs (0-1, higher = better)",
+})
+st.dataframe(display_table, use_container_width=True)
 
 csv = filtered[table_cols].to_csv(index=False).encode("utf-8")
 st.download_button(
