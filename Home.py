@@ -46,9 +46,6 @@ st.subheader("Pages")
 
 st.markdown(
     """
-)
-    **The rest of the pages can be found in the sidebar:**
-
     - **Hotspot Map**: Where in San Diego is literacy help needed most?
     - **Literacy Rates by Zip**: How do literacy levels compare across each zip code?
     - **Temporal Trends**: How have literacy rates changed from 2017 to 2023?
