@@ -44,15 +44,20 @@ st.markdown(
 
 st.subheader("Pages")
 
-st.markdown(
-    """
-    - **Hotspot Map**: Where in San Diego is literacy help needed most?
-    - **Literacy Rates by Zip**: How do literacy levels compare across each zip code?
-    - **Temporal Trends**: How have literacy rates changed from 2017 to 2023?
-    - **Accessibility & Transit**: How difficult is it to reach a literacy center? Includes transit routes.
-    - **Service Gap Rankings**: What zip codes most need help but lack sufficient programs to help them?
-    - **Micro-Area Literacy Score**: How would we generally compare how well catered each zip code is?
-    - **Program Directory**: What programs are available?
-    - **About**: About this dashboard, including methodology and data sources
-    """
-)
+page_info = [
+    ("🗺️ Hotspot Map", "Where in San Diego is literacy help needed most?"),
+    ("📊 Literacy Rates by Zip", "How do literacy levels compare across each zip code?"),
+    ("📈 Temporal Trends", "How have literacy rates changed from 2017 to 2023?"),
+    ("🚌 Accessibility & Transit", "How difficult is it to reach a literacy center?"),
+    ("📋 Service Gap Rankings", "What zip codes most need help but lack programs?"),
+    ("🧮 Micro-Area Score", "How well catered is each zip code, overall?"),
+    ("🔎 Program Directory", "What programs are available?"),
+    ("ℹ️ About", "Methodology, data sources, and limitations."),
+]
+
+cols = st.columns(4)
+for i, (name, desc) in enumerate(page_info):
+    with cols[i % 4]:
+        with st.container(border=True):
+            st.markdown(f"**{name}**")
+            st.caption(desc)
