@@ -8,6 +8,9 @@ st.markdown(
     This dashboard supports the **DSA Literacy Service Gap** volunteer analytics
     project for San Diego County, with the goal of mapping literacy need against program
     accessibility to identify under-served micro-areas (zip codes).
+
+    It is intended to be used as an internal planning tool for Council staff, program leads, and data teams making decisions 
+    about where to place and fund literacy programs, rather than a tool for general community or educator use.
     """
 )
 
