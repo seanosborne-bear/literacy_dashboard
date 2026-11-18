@@ -10,7 +10,7 @@ st.title("Hotspot Map with Service Location Overlay")
 
 st.markdown(
     """
-    For every zip code in San Diego County, this visual displays a bubble to showcase how necessary literacy help should be provided. The bigger the bubble, the more necessary help should be provided.
+    For every zip code in San Diego County, this visual displays a bubble to showcase how necessary literacy help should be provided. The bigger the bubble, the more people at Level 1 literacy.
 
     *Note: a true zip-boundary choropleth needs the TIGER/Line zip boundary
     shapefile, which hasn't been provided yet (too large to upload). This view
